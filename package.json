@@ -1,0 +1,27 @@
+{
+  "name": "pulsechat",
+  "version": "2.0.0",
+  "description": "PulseChat — a real-time communication platform built with Node.js, Express and Socket.io. Rooms, presence, typing indicators, reactions, replies, edit/delete, pinned & saved messages, mentions, search and themes — no database required.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "chat",
+    "express",
+    "node",
+    "render",
+    "socket.io",
+    "realtime"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}

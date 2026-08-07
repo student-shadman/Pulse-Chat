@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PulseChat — Real-Time Communication</title>
+    <meta name="description" content="PulseChat is a real-time chat platform with rooms, presence, reactions and more." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="app.css">
+  </head>
+  <body class="theme-aurora">
+    <div class="app-shell" id="appShell">
+      <!-- ============================== SIDEBAR ============================== -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar__brand">
+          <span class="brand-mark" aria-hidden="true">
+            <span class="brand-pulse"></span>
+          </span>
+          <div>
+            <p class="brand-name">PulseChat</p>
+            <p class="brand-tag">Connect. Communicate. Instantly.</p>
+          </div>
+          <button id="closeSidebarButton" class="icon-button sidebar__close" type="button" aria-label="Close sidebar">✕</button>
+        </div>
+
+        <div class="sidebar__search">
+          <input
+            id="roomSearchInput"
+            type="search"
+            placeholder="Search rooms..."
+            aria-label="Search rooms"
+          />
+        </div>
+
+        <nav class="sidebar__section" aria-labelledby="roomsHeading">
+          <div class="sidebar__section-header">
+            <h2 id="roomsHeading">Rooms</h2>
+            <button id="newRoomButton" class="icon-button" type="button" aria-label="Create room" title="Create room">＋</button>
+          </div>
+          <ul id="roomList" class="room-list" aria-live="polite"></ul>
+        </nav>
+
+        <div class="sidebar__section">
+          <div class="sidebar__section-header">
+            <h2>Quick Access</h2>
+          </div>
+          <ul class="quick-list">
+            <li>
+              <button id="openSavedButton" class="quick-item" type="button">
+                <span aria-hidden="true">🔖</span> Saved messages <span id="savedCount" class="quick-count">0</span>
+              </button>
+            </li>
+            <li>
+              <button id="openPinnedButton" class="quick-item" type="button">
+                <span aria-hidden="true">📌</span> Pinned in room <span id="pinnedCount" class="quick-count">0</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="sidebar__footer">
+          <label for="themeSelect" class="sr-only">Theme</label>
+          <select id="themeSelect" class="theme-select" aria-label="Select theme">
+            <option value="aurora">Aurora</option>
+            <option value="midnight">Midnight</option>
+            <option value="sunset">Sunset</option>
+            <option value="forest">Forest</option>
+            <option value="minimal">Minimal</option>
+          </select>
+          <div class="sidebar__me">
+            <span id="meAvatar" class="avatar avatar--sm" aria-hidden="true">?</span>
+            <span id="currentUser" class="current-user">Guest</span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+
+      <!-- ============================== MAIN ============================== -->
+      <main class="chat-main">
+        <header class="chat-topbar">
+          <button id="openSidebarButton" class="icon-button chat-topbar__menu" type="button" aria-label="Open rooms">☰</button>
+
+          <div class="chat-topbar__room">
+            <h1 id="currentRoom">#general</h1>
+            <p id="roomTopic" class="chat-topbar__topic">Say hello and talk about anything.</p>
+          </div>
+
+          <div class="chat-topbar__actions">
+            <span id="connectionStatus" class="status-badge">Connecting...</span>
+            <span id="onlineCount" class="online-count">0 online</span>
+
+            <button id="searchToggleButton" class="icon-button" type="button" title="Search messages (Ctrl+K)" aria-label="Search messages">🔍</button>
+
+            <div class="notif-wrap">
+              <button id="notifButton" class="icon-button" type="button" title="Notifications" aria-label="Notifications">
+                🔔<span id="notifBadge" class="notif-badge is-hidden">0</span>
+              </button>
+              <div id="notifPanel" class="notif-panel is-hidden">
+                <div class="notif-panel__header">
+                  <h3>Notifications</h3>
+                  <button id="clearNotifsButton" class="link-button" type="button">Clear all</button>
+                </div>
+                <ul id="notifList" class="notif-list">
+                  <li class="notif-empty">You're all caught up.</li>
+                </ul>
+              </div>
+            </div>
+
+            <button id="openMembersButton" class="icon-button chat-topbar__members" type="button" title="Room details" aria-label="Room details">ⓘ</button>
+          </div>
+        </header>
+
+        <div id="searchBar" class="search-bar is-hidden">
+          <input id="searchInput" type="search" placeholder="Search this room... (Esc to close)" aria-label="Search messages" />
+          <span id="searchResultCount" class="search-bar__count"></span>
+          <button id="searchCloseButton" class="icon-button" type="button" aria-label="Close search">✕</button>
+        </div>
+
+        <div id="pinnedStrip" class="pinned-strip is-hidden">
+          <span class="pinned-strip__icon" aria-hidden="true">📌</span>
+          <div id="pinnedStripText" class="pinned-strip__text"></div>
+          <button id="pinnedStripNext" class="link-button" type="button">Next</button>
+        </div>
+
+        <div id="messages" class="messages" aria-live="polite"></div>
+
+        <button id="jumpToLatest" class="jump-to-latest is-hidden" type="button">↓ New messages</button>
+
+        <p id="typingIndicator" class="typing-indicator" aria-live="polite"></p>
+
+        <div id="replyPreview" class="reply-preview is-hidden">
+          <div class="reply-preview__body">
+            <span class="reply-preview__label">Replying to <strong id="replyPreviewName"></strong></span>
+            <span id="replyPreviewText" class="reply-preview__text"></span>
+          </div>
+          <button id="cancelReplyButton" class="icon-button" type="button" aria-label="Cancel reply">✕</button>
+        </div>
+
+        <div id="editBanner" class="reply-preview is-hidden">
+          <div class="reply-preview__body">
+            <span class="reply-preview__label">Editing message</span>
+          </div>
+          <button id="cancelEditButton" class="icon-button" type="button" aria-label="Cancel edit">✕</button>
+        </div>
+
+        <div id="imagePreview" class="image-preview is-hidden">
+          <img id="imagePreviewThumb" class="image-preview__thumb" alt="Selected preview" />
+          <div class="image-preview__details">
+            <span id="imagePreviewName" class="image-preview__name"></span>
+            <button id="clearImageButton" class="image-preview__clear" type="button">Remove</button>
+          </div>
+        </div>
+
+        <div id="emojiPicker" class="emoji-picker is-hidden" role="menu" aria-label="Emoji picker"></div>
+        <div id="mentionMenu" class="mention-menu is-hidden" role="listbox" aria-label="Mention a user"></div>
+
+        <form id="messageForm" class="composer" autocomplete="off">
+          <input id="imageInput" class="sr-only" type="file" name="image" accept="image/*" />
+          <label for="imageInput" class="composer__icon-button" title="Attach image">📎</label>
+          <button id="emojiButton" type="button" class="composer__icon-button" title="Emoji">😊</button>
+
+          <textarea
+            id="messageInput"
+            name="message"
+            placeholder="Message #general — use @ to mention, / for commands"
+            maxlength="1000"
+            rows="1"
+            disabled
+          ></textarea>
+
+          <button id="sendButton" type="submit" class="send-button" disabled aria-label="Send message">
+            <span aria-hidden="true">➤</span>
+          </button>
+        </form>
+      </main>
+
+      <!-- ============================== RIGHT PANEL ============================== -->
+      <aside class="right-panel" id="rightPanel" hidden>
+        <div class="right-panel__header">
+          <div class="right-panel__tabs" role="tablist">
+            <button class="right-panel__tab is-active" data-panel="members" type="button" role="tab">Members</button>
+            <button class="right-panel__tab" data-panel="pinned" type="button" role="tab">Pinned</button>
+            <button class="right-panel__tab" data-panel="saved" type="button" role="tab">Saved</button>
+          </div>
+          <button id="closeRightPanelButton" class="icon-button" type="button" aria-label="Close panel">✕</button>
+        </div>
+
+        <div id="membersPanel" class="right-panel__body">
+          <div class="right-panel__count"><span id="membersCount">0 users</span> in this room</div>
+          <ul id="membersList" class="members-list" aria-live="polite">
+            <li class="member-empty">Join a room to see who is here.</li>
+          </ul>
+        </div>
+
+        <div id="pinnedPanel" class="right-panel__body is-hidden">
+          <ul id="pinnedList" class="panel-message-list">
+            <li class="panel-empty">No pinned messages yet. Pin an important message to see it here.</li>
+          </ul>
+        </div>
+
+        <div id="savedPanel" class="right-panel__body is-hidden">
+          <ul id="savedList" class="panel-message-list">
+            <li class="panel-empty">Nothing saved yet. Use the 🔖 action on any message to save it.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ============================== JOIN OVERLAY ============================== -->
+    <div id="usernameOverlay" class="overlay">
+      <form id="joinForm" class="join-card" autocomplete="off">
+        <span class="brand-mark brand-mark--lg" aria-hidden="true"><span class="brand-pulse"></span></span>
+        <p class="eyebrow">Welcome</p>
+        <h2>Join PulseChat</h2>
+        <p class="join-copy">Pick a username and a room. No sign-up needed.</p>
+
+        <label for="usernameInput" class="sr-only">Username</label>
+        <input id="usernameInput" type="text" name="username" placeholder="Your username" maxlength="24" required />
+
+        <label for="roomInput" class="sr-only">Room</label>
+        <input id="roomInput" type="text" name="room" placeholder="Room name" value="general" maxlength="32" required />
+
+        <button type="submit">Enter Chat</button>
+        <p id="joinError" class="feedback" role="alert"></p>
+      </form>
+    </div>
+
+    <!-- ============================== NEW ROOM MODAL ============================== -->
+    <div id="newRoomOverlay" class="overlay is-hidden">
+      <form id="newRoomForm" class="join-card join-card--sm" autocomplete="off">
+        <p class="eyebrow">New room</p>
+        <h2>Create a room</h2>
+        <label for="newRoomName" class="sr-only">Room name</label>
+        <input id="newRoomName" type="text" placeholder="Room name" maxlength="32" required />
+        <label for="newRoomTopic" class="sr-only">Room topic</label>
+        <input id="newRoomTopic" type="text" placeholder="Topic (optional)" maxlength="120" />
+        <div class="join-card__row">
+          <button type="button" id="cancelNewRoomButton" class="secondary-button">Cancel</button>
+          <button type="submit">Create &amp; join</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+   <!---- <script src="server.js"></script>
+  </body>
+</html>
